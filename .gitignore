@@ -1,0 +1,8 @@
+#ignore debug path
+/build-WiFiAndroid-Desktop_Qt_5_4_1_MinGW_32bit-Debug
+/build-WiFiAndroid-Desktop_Qt_5_4_1_MinGW_32bit-Release
+/build-WiFiAndroid-Android_armeabi_v7a_GCC_4_9_Qt_5_4_1-Debug
+/build-WiFiAndroid-Android_armeabi_v7a_GCC_4_9_Qt_5_4_1-Release
+#ignore /WiFiAndroid/*.user, *.autosave
+/WiFiAndroid/*.user
+/WiFiAndroid/*.autosave
