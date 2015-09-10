@@ -6,10 +6,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    nPort = 3387;
     manager = new QNetworkConfigurationManager(this);
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(getConfigurations()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(clearText()));
     connect(ui->pushButton_3,SIGNAL(clicked()),this,SLOT(getInterfaces()));
+    connect(ui->pushButton_4,SIGNAL(clicked()),this,SLOT(crServer()));
+    connect(ui->pushButton_5,SIGNAL(clicked()),this,SLOT(crClient()));
 }
 
 MainWindow::~MainWindow()
@@ -77,6 +80,13 @@ void MainWindow::getInterfaces()
                                     + "\n netmask(): "           + addressEntry.netmask().toString()
                                     + "\n broadcast(): "         + addressEntry.broadcast().toString()
                                 );
+            if (addressEntry.ip().toString().split(".").size()==4) {
+                if (addressEntry.ip().toString().split(".").at(2)=="0") {
+                    if (addressEntry.ip().toString().split(".").at(0)=="192") {
+                        entryAddress = addressEntry;
+                    }
+                }
+            }
         }
     }
     ui->textEdit->append("----------------------QHostInterfaces------------------");
@@ -86,4 +96,64 @@ void MainWindow::getInterfaces()
 void MainWindow::clearText()
 {
     ui->textEdit->clear();
+}
+
+void MainWindow::crServer()
+{
+    tcpServer = new QTcpServer(this);
+    connect(tcpServer,SIGNAL(newConnection()),this,SLOT(newConnectionToServer()));
+    tcpServer->listen(QHostAddress::Broadcast,nPort);
+}
+
+void MainWindow::newConnectionToServer()
+{
+    QTcpSocket* tcpSocket = tcpServer->nextPendingConnection();
+    connect(tcpSocket,SIGNAL(readyRead()),this,SLOT(readClientSocketOnServer()));
+    sendToClient(tcpSocket,"Hello from Server, your ip: " + tcpSocket->peerAddress().toString() + "\n");
+}
+
+void MainWindow::readClientSocketOnServer()
+{
+    QTcpSocket* tcpSocket = (QTcpSocket*)sender();
+    while (tcpSocket->canReadLine()) {
+        ui->textEdit->append(QString(tcpSocket->readAll()));
+    }
+    //sendToClient(tcpSocket,"Your ip from server: " + tcpSocket->peerAddress().toString() + "\n");
+}
+
+void MainWindow::sendToClient(QTcpSocket* tcpSocket, QString message)
+{
+    tcpSocket->write(QByteArray().append(message));
+}
+
+//---------------------------------------------------------------------------
+
+void MainWindow::crClient()
+{
+    tcpClient = new QTcpSocket(this);
+    connect(tcpClient,SIGNAL(connected()),this,SLOT(connected()));
+    connect(tcpClient,SIGNAL(readyRead()),this,SLOT(readServerSocketOnClient()));
+    ui->textEdit->append("My address: " + entryAddress.ip().toString());
+    ui->textEdit->append("My broadcast: " + entryAddress.broadcast().toString());
+    //tcpClient->connectToHost(QHostAddress::Broadcast,nPort);
+    tcpClient->connectToHost(QHostAddress::Broadcast,nPort);
+}
+
+void MainWindow::readServerSocketOnClient()
+{
+    QTcpSocket* tcpSocket = (QTcpSocket*)sender();
+    while (tcpSocket->canReadLine()) {
+        ui->textEdit->append(QString(tcpSocket->readAll()));
+    }
+    sendToServer(tcpSocket,"Your ip from client: " + tcpSocket->peerAddress().toString() + "\n");
+}
+
+void MainWindow::sendToServer(QTcpSocket* tcpSocket, QString message)
+{
+    tcpSocket->write(QByteArray().append(message));
+}
+
+void MainWindow::connected()
+{
+    ui->textEdit->append("I am connected");
 }
