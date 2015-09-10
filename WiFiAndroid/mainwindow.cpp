@@ -102,7 +102,9 @@ void MainWindow::crServer()
 {
     tcpServer = new QTcpServer(this);
     connect(tcpServer,SIGNAL(newConnection()),this,SLOT(newConnectionToServer()));
-    tcpServer->listen(QHostAddress::Broadcast,nPort);
+    if(!tcpServer->listen(QHostAddress::Any,nPort))
+        ui->textEdit->append(tcpServer->errorString());
+
 }
 
 void MainWindow::newConnectionToServer()
