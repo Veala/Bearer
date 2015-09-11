@@ -98,11 +98,13 @@ void MainWindow::clearText()
     ui->textEdit->clear();
 }
 
+//---------------------------------------------------------------------------Server
+
 void MainWindow::crServer()
 {
     tcpServer = new QTcpServer(this);
     connect(tcpServer,SIGNAL(newConnection()),this,SLOT(newConnectionToServer()));
-    if(!tcpServer->listen(QHostAddress::Any,nPort))
+    if(!tcpServer->listen(QHostAddress("10.7.14.14"),nPort))
         ui->textEdit->append(tcpServer->errorString());
 
 }
@@ -128,7 +130,7 @@ void MainWindow::sendToClient(QTcpSocket* tcpSocket, QString message)
     tcpSocket->write(QByteArray().append(message));
 }
 
-//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------Client
 
 void MainWindow::crClient()
 {
